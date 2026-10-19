@@ -1,0 +1,8 @@
+@model Product
+@using System.Globalization
+<article class="product-card" data-product-card data-category="@Model.Category" data-search="@($"{Model.Name} {Model.Brand} {Model.Category} {Model.Sku} {Model.Description}")" data-price="@Model.Price.ToString(CultureInfo.InvariantCulture)" data-rating="@Model.Rating.ToString(CultureInfo.InvariantCulture)" data-name="@Model.Name">
+    <a class="product-image" asp-action="Details" asp-controller="Home" asp-route-id="@Model.Id"><span class="product-badge">@Model.Badge</span><img src="~/images/@Model.ImageFile" alt="@Model.Name" loading="lazy" width="600" height="600" /><span class="view-product">Discover product ↗</span></a>
+    <div class="product-meta"><span>@Model.Brand · @Model.Category</span><span class="rating"><span aria-hidden="true">★</span> @Model.Rating.ToString("0.0") <small>(@Model.ReviewCount.ToString("N0"))</small></span></div>
+    <h3><a asp-action="Details" asp-controller="Home" asp-route-id="@Model.Id">@Model.Name</a></h3>
+    <div class="card-bottom"><div><strong>@Model.Price.ToString("C", CultureInfo.GetCultureInfo("en-IE"))</strong><span class="stock">@(Model.StockQuantity > 0 ? "In stock" : "Out of stock")</span></div><button class="add-button" type="button" data-add-cart="@Model.Id" disabled="@(Model.StockQuantity <= 0)" aria-label="Add @Model.Name to bag">+</button></div>
+</article>

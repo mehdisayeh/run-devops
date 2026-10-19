@@ -1,0 +1,52 @@
+@model Product
+@using System.Globalization
+@{ ViewData["Title"] = Model.Name; }
+<div class="shell detail-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a asp-action="Index">Home</a> / 
+        <a asp-action="Index" asp-route-category="@Model.Category" asp-fragment="collection">@Model.Category</a> / <span>@Model.Brand</span>
+    </nav>
+    <section class="detail-grid">
+        <div class="detail-image">
+            <span class="product-badge">@Model.Badge</span>
+            <img src="~/images/@Model.ImageFile" alt="@Model.Name" width="800" height="800" />
+        </div>
+        <div class="detail-copy">
+            <p class="eyebrow">@Model.Brand · @Model.Category</p>
+            <h1>@Model.Name</h1>
+            <p class="rating">
+                <span aria-hidden="true">★★★★★</span> @Model.Rating.ToString("0.0") out of 5 <span class="muted">· @Model.ReviewCount.ToString("N0") reviews</span>
+            </p>
+            <p class="detail-price">@Model.Price.ToString("C", CultureInfo.GetCultureInfo("en-IE")) <small>EUR</small></p>
+            <p class="detail-description">@Model.Description</p>
+            <p class="stock">@(Model.StockQuantity > 0 ? $"In stock · {Model.StockQuantity} available" : "Currently out of stock")</p>
+                    
+            <div class="detail-purchase">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" min="1" max="@Model.StockQuantity" value="1" disabled="@(Model.StockQuantity <= 0)" />
+                <button type="button" class="button button-dark" data-add-cart="@Model.Id" data-quantity-input="quantity" disabled="@(Model.StockQuantity <= 0)">Add to bag <span>＋</span></button>    
+            </div>
+                    
+            <a class="text-link" asp-action="Cart">View your bag ↗</a>
+            <dl class="detail-specs">
+                <div>
+                    <dt>Product reference</dt>
+                    <dd>@Model.Sku</dd>
+                </div>
+                        
+                <div>
+                    <dt>Brand</dt>
+                    <dd>@Model.Brand</dd>
+                </div>
+                <div>     
+                    <dt>Collection</dt>
+                    <dd>@Model.Category</dd>
+                </div>
+            </dl>
+            <p class="small muted">Your bag is saved in this browser. Online checkout is not available yet.</p>
+        </div>
+    </section>
+    <div class="detail-back">
+        <a class="text-link" asp-action="Index" asp-fragment="collection">← Back to the collection</a>
+    </div>
+</div>
