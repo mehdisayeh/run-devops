@@ -1,15 +1,26 @@
-# FORME storefront
+# VELORA storefront
 
 ASP.NET Core MVC (.NET 9) with the existing Bootstrap 5.3.3 assets and vanilla JavaScript. No database, API, authentication, payment processing, or added runtime package dependencies.
 
 ## Run
 
 ```powershell
-dotnet build Shopping/Shopping.sln
-dotnet run --project Shopping/Shopping.Client --no-launch-profile --urls http://localhost:5088
+dotnet build Velora/Velora.sln
+dotnet run --project Velora/Velora.Client --no-launch-profile --urls http://localhost:5088
 ```
 
 Open http://localhost:5088. Run commands from the repository root.
+
+## Docker
+
+Run these commands from the repository root:
+
+```powershell
+docker build -f Velora/Velora.Client/Dockerfile -t velora/client:1.0.0 Velora
+docker run --name velora-client --rm -p 5088:8080 velora/client:1.0.0
+```
+
+Open http://localhost:5088. The Docker build context is the `Velora` solution folder.
 
 ## Structure
 

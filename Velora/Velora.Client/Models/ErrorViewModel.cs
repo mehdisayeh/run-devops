@@ -1,4 +1,4 @@
-namespace Shopping.Client.Models;
+namespace Velora.Client.Models;
 
 public class ErrorViewModel
 {

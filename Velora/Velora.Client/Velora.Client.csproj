@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileTag>velora/client:1.0.0</DockerfileTag>
+    <DockerfileRunArguments>--name velora-client</DockerfileRunArguments>
   </PropertyGroup>
 
   <ItemGroup>

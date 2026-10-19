@@ -1,6 +1,6 @@
-﻿using Shopping.Client.Models;
+﻿using Velora.Client.Models;
 
-namespace Shopping.Client.Data;
+namespace Velora.Client.Data;
 
 public static class ProductContext
 {

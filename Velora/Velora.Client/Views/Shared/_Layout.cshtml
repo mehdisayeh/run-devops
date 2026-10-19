@@ -1,12 +1,12 @@
-@using Shopping.Client.Data
+@using Velora.Client.Data
 @using System.Text.Json
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f5f3ef" />
-    <meta name="description" content="Considered technology for a better everyday. Explore the FORME collection of premium audio, laptops and essentials." />
-    <title>@ViewData["Title"] — FORME</title>
+    <meta name="description" content="Considered technology for a better everyday. Explore the VELORA collection of premium audio, laptops and essentials." />
+    <title>@ViewData["Title"] — VELORA</title>
     <link rel="icon" href="~/favicon.ico" sizes="any" asp-append-version="true" />
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" asp-append-version="true" />
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" asp-append-version="true" />
@@ -20,7 +20,7 @@
 <div class="announcement">Thoughtfully chosen. Beautifully made. <span>Discover your everyday upgrade →</span></div>
 <header class="site-header">
     <div class="shell nav-main">
-        <a class="wordmark" asp-controller="Home" asp-action="Index" aria-label="FORME home">forme<span>®</span></a>
+        <a class="wordmark" asp-controller="Home" asp-action="Index" aria-label="VELORA home">velora<span>®</span></a>
         <form class="nav-search" asp-controller="Home" asp-action="Index" method="get" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input type="search" name="q" id="nav-search" placeholder="Find your next favorite…" aria-label="Search the collection" /><kbd>/</kbd></form>
         <a class="nav-about" asp-controller="Home" asp-action="Index" asp-fragment="our-story">Our philosophy</a>
         <a class="cart-link" asp-controller="Home" asp-action="Cart" aria-label="Shopping bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span class="bag-label">Bag</span><span id="cart-count">0</span></a>
@@ -28,7 +28,7 @@
     <nav class="shell category-nav" aria-label="Main navigation"><a asp-controller="Home" asp-action="Index" asp-fragment="collection">Shop all</a>@foreach(var category in ProductContext.Products.Select(p => p.Category).Distinct()){<a asp-controller="Home" asp-action="Index" asp-route-category="@category" asp-fragment="collection">@category</a>}<a class="nav-edit" asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">The best-seller edit ↗</a></nav>
 </header>
 <main id="main">@RenderBody()</main>
-<footer class="site-footer" id="footer"><div class="shell footer-grid"><div><a class="wordmark" asp-controller="Home" asp-action="Index">forme<span>®</span></a><p>Good design. Great technology.<br />A little more extraordinary, every day.</p></div><div><h2>Explore</h2><a asp-controller="Home" asp-action="Index" asp-fragment="collection">The collection</a><a asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">Best sellers</a><a asp-controller="Home" asp-action="Cart">Your bag</a></div><div><h2>About FORME</h2><a asp-controller="Home" asp-action="Index" asp-fragment="our-story">Our philosophy</a><a asp-controller="Home" asp-action="Privacy">Privacy &amp; storage</a><a asp-controller="Home" asp-action="Index" asp-fragment="shopping-info">Shopping information</a></div><div><h2>A considered collection</h2><p>Ten exceptional products.<br />Selected for the way you live.</p><span class="footer-currency">Europe · EUR €</span></div></div><div class="shell footer-bottom"><span>© @DateTime.Now.Year FORME. Everyday, elevated.</span><span>Designed with intention.</span></div></footer>
+<footer class="site-footer" id="footer"><div class="shell footer-grid"><div><a class="wordmark" asp-controller="Home" asp-action="Index">velora<span>®</span></a><p>Good design. Great technology.<br />A little more extraordinary, every day.</p></div><div><h2>Explore</h2><a asp-controller="Home" asp-action="Index" asp-fragment="collection">The collection</a><a asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">Best sellers</a><a asp-controller="Home" asp-action="Cart">Your bag</a></div><div><h2>About VELORA</h2><a asp-controller="Home" asp-action="Index" asp-fragment="our-story">Our philosophy</a><a asp-controller="Home" asp-action="Privacy">Privacy &amp; storage</a><a asp-controller="Home" asp-action="Index" asp-fragment="shopping-info">Shopping information</a></div><div><h2>A considered collection</h2><p>Ten exceptional products.<br />Selected for the way you live.</p><span class="footer-currency">Europe · EUR €</span></div></div><div class="shell footer-bottom"><span>© @DateTime.Now.Year VELORA. Everyday, elevated.</span><span>Designed with intention.</span></div></footer>
 <div class="toast-message" id="cart-message" role="status" aria-live="polite"></div>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 @await RenderSectionAsync("Scripts", required: false)

@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using Shopping.Client.Data;
+using Velora.Client.Data;
 using Microsoft.AspNetCore.Mvc;
-using Shopping.Client.Models;
+using Velora.Client.Models;
 
-namespace Shopping.Client.Controllers
+namespace Velora.Client.Controllers
 {
     public class HomeController : Controller
     {
