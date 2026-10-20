@@ -4,8 +4,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient("Products", client =>
 {
-    var baseUrl = builder.Configuration["Api:BaseUrl"]
-        ?? throw new InvalidOperationException("Api:BaseUrl must be configured.");
+    var baseUrl = builder.Configuration["CatalogApiUrl"]
+        ?? throw new InvalidOperationException("CatalogApiUrl must be configured.");
     client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
     client.Timeout = TimeSpan.FromSeconds(10);
 });

@@ -1,0 +1,30 @@
+
+services:
+  velora.api:
+    container_name: velora-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "MongoDB:ConnectionString=mongodb://velora-db:27017"
+    depends_on:
+      - velora.db
+    ports:
+      - "8000:8080"
+
+  velora.client:
+    container_name: velora-client
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development 
+      - "CatalogApiUrl=http://velora-api:8080"
+    depends_on:
+      - velora.db
+      - velora.api
+    ports:
+      - "8001:8080"
+
+  velora.db:
+    container_name: velora-db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - ${WEBAPP_STORAGE_HOME}/site:/data/db

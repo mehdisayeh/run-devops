@@ -1,0 +1,15 @@
+services:
+  velora.api:
+    image: ${DOCKER_REGISTRY-}veloraapi
+    build:
+      context: .
+      dockerfile: Velora.API/Dockerfile
+
+  velora.client:
+    image: ${DOCKER_REGISTRY-}veloraclient
+    build:
+      context: .
+      dockerfile: Velora.Client/Dockerfile
+
+  velora.db:
+    image: mongo

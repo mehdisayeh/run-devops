@@ -22,6 +22,7 @@ builder.Services.AddSingleton<IMongoCollection<Product>>(services =>
         .GetCollection<Product>(settings.CollectionName);
 });
 builder.Services.AddScoped<IProductRepository, MongoProductRepository>();
+builder.Services.AddHostedService<CatalogSeeder>();
 builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new() { Title = "Velora Catalog API", Version = "v1" }));
 
