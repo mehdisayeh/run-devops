@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Velora.Client.Data;
+using Velora.Client.Services;
 using Microsoft.AspNetCore.Mvc;
 using Velora.Client.Models;
 
@@ -7,21 +7,21 @@ namespace Velora.Client.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ProductApiClient _products;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ProductApiClient products)
         {
-            _logger = logger;
+            _products = products;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            return View(ProductContext.Products);
+            return View(await _products.GetProductsAsync(cancellationToken));
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
         {
-            var product = ProductContext.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _products.GetProductAsync(id, cancellationToken);
             return product is null ? NotFound() : View(product);
         }
 

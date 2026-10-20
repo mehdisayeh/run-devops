@@ -1,4 +1,5 @@
-@using Velora.Client.Data
+@inject Velora.Client.Services.ProductApiClient ProductApi
+@{ var products = await ProductApi.GetProductsAsync(Context.RequestAborted); }
 @using System.Text.Json
 <!DOCTYPE html>
 <html lang="en">
@@ -12,7 +13,7 @@
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <script id="product-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(ProductContext.Products))</script>
+    <script id="product-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(products))</script>
     <script src="~/js/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
@@ -25,7 +26,7 @@
         <a class="nav-about" asp-controller="Home" asp-action="Index" asp-fragment="our-story">Our philosophy</a>
         <a class="cart-link" asp-controller="Home" asp-action="Cart" aria-label="Shopping bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span class="bag-label">Bag</span><span id="cart-count">0</span></a>
     </div>
-    <nav class="shell category-nav" aria-label="Main navigation"><a asp-controller="Home" asp-action="Index" asp-fragment="collection">Shop all</a>@foreach(var category in ProductContext.Products.Select(p => p.Category).Distinct()){<a asp-controller="Home" asp-action="Index" asp-route-category="@category" asp-fragment="collection">@category</a>}<a class="nav-edit" asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">The best-seller edit ↗</a></nav>
+    <nav class="shell category-nav" aria-label="Main navigation"><a asp-controller="Home" asp-action="Index" asp-fragment="collection">Shop all</a>@foreach(var category in products.Select(p => p.Category).Distinct()){<a asp-controller="Home" asp-action="Index" asp-route-category="@category" asp-fragment="collection">@category</a>}<a class="nav-edit" asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">The best-seller edit ↗</a></nav>
 </header>
 <main id="main">@RenderBody()</main>
 <footer class="site-footer" id="footer"><div class="shell footer-grid"><div><a class="wordmark" asp-controller="Home" asp-action="Index">velora<span>®</span></a><p>Good design. Great technology.<br />A little more extraordinary, every day.</p></div><div><h2>Explore</h2><a asp-controller="Home" asp-action="Index" asp-fragment="collection">The collection</a><a asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">Best sellers</a><a asp-controller="Home" asp-action="Cart">Your bag</a></div><div><h2>About VELORA</h2><a asp-controller="Home" asp-action="Index" asp-fragment="our-story">Our philosophy</a><a asp-controller="Home" asp-action="Privacy">Privacy &amp; storage</a><a asp-controller="Home" asp-action="Index" asp-fragment="shopping-info">Shopping information</a></div><div><h2>A considered collection</h2><p>Ten exceptional products.<br />Selected for the way you live.</p><span class="footer-currency">Europe · EUR €</span></div></div><div class="shell footer-bottom"><span>© @DateTime.Now.Year VELORA. Everyday, elevated.</span><span>Designed with intention.<br/>V1.0.1</span></div></footer>
