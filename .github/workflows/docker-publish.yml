@@ -1,0 +1,40 @@
+name: Velora CI - Docker Publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.ci_action_velora }}
+
+      - name: Build and push VELORA image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Velora
+          file: ./Velora/Velora.Client/Dockerfile
+          push: true
+          tags: |
+            mehdisayeh/velora:latest
+            mehdisayeh/velora:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
