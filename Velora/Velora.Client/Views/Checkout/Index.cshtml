@@ -1,0 +1,31 @@
+@{ ViewData["Title"] = "Checkout"; }
+<div class="shell checkout-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a asp-controller="Home" asp-action="Cart">Your bag</a> / Checkout</nav>
+    <p class="eyebrow">ONE STEP CLOSER</p><h1>Checkout.</h1>
+    <p>Place a guest order. No payment is collected here. Shipping and tax charges are not calculated in this version; your order total is the product total shown below.</p>
+    <div id="checkout-status" role="status" aria-live="polite">Checking your bag…</div>
+    <div id="checkout-error" class="checkout-error" role="alert" hidden></div>
+    <form id="checkout-form" class="cart-layout" hidden>
+        @Html.AntiForgeryToken()
+        <fieldset id="checkout-fields" class="checkout-fields">
+            <legend>Contact &amp; delivery address</legend>
+            <label for="fullName">Full name<input id="fullName" name="fullName" autocomplete="shipping name" maxlength="100" required /></label>
+            <label for="email">Email<input id="email" name="email" type="email" autocomplete="email" maxlength="254" required /></label>
+            <label for="line1">Address line 1<input id="line1" name="line1" autocomplete="shipping address-line1" maxlength="200" required /></label>
+            <label for="line2">Address line 2 (optional)<input id="line2" name="line2" autocomplete="shipping address-line2" maxlength="200" /></label>
+            <label for="city">City<input id="city" name="city" autocomplete="shipping address-level2" maxlength="100" required /></label>
+            <label for="postalCode">Postal code<input id="postalCode" name="postalCode" autocomplete="shipping postal-code" maxlength="30" required /></label>
+            <label for="country">Country<input id="country" name="country" autocomplete="shipping country-name" maxlength="100" required /></label>
+        </fieldset>
+        <aside class="cart-summary">
+            <h2>Your order</h2><div id="checkout-lines"></div>
+            <hr /><div><span>Order total (EUR)</span><strong id="checkout-total"></strong></div>
+            <p>Payment status: unpaid. Placing this order reduces available stock.</p>
+            <button id="place-order" class="button button-dark" type="submit">Place order</button>
+            <button id="refresh-quote" class="text-link" type="button" hidden>Review updated summary</button>
+            <a asp-controller="Home" asp-action="Cart" class="text-link" id="edit-bag">Back to your bag</a>
+        </aside>
+    </form>
+    <noscript><p>Enable JavaScript to review your bag and place an order.</p></noscript>
+</div>
+@section Scripts { <script src="~/js/checkout.js" asp-append-version="true" defer></script> }

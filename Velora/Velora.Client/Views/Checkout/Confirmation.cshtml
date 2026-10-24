@@ -1,0 +1,26 @@
+@model Velora.Contracts.OrderReceipt
+@using System.Globalization
+@{ ViewData["Title"] = "Order confirmation"; }
+<div class="shell checkout-page" id="order-confirmation" data-order-id="@Model.Id">
+    <p class="eyebrow">THANK YOU, @Model.Address.FullName</p><h1>Your order is placed.</h1>
+    <p>Save this private confirmation link to return to your order. Anyone with the link can view its details.</p>
+    <p class="order-reference">Order reference: <strong>@Model.Id</strong></p>
+    <p>Placed @Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm 'UTC'") · @Model.Status · Payment: @Model.PaymentStatus</p>
+    <div class="cart-layout">
+        <section><h2>Delivery address</h2>
+            <address>@Model.Address.FullName<br />@Model.Address.Line1<br />
+                @if (!string.IsNullOrWhiteSpace(Model.Address.Line2)) { @Model.Address.Line2<br /> }
+                @Model.Address.PostalCode @Model.Address.City<br />@Model.Address.Country</address>
+            <p>Contact: @Model.Address.Email</p><p>No payment has been collected. This confirmation records your order; it does not confirm payment or dispatch.</p>
+            <a asp-controller="Home" asp-action="Index" class="button button-dark">Continue shopping</a>
+        </section>
+        <aside class="cart-summary"><h2>Order summary</h2>
+            @foreach (var line in Model.Items) {
+                <div><span>@line.Name × @line.Quantity</span><strong>@line.LineTotal.ToString("C", CultureInfo.GetCultureInfo("en-IE"))</strong></div>
+                <p class="small">@line.Sku · @line.UnitPrice.ToString("C", CultureInfo.GetCultureInfo("en-IE")) each</p>
+            }
+            <hr /><div><span>Total (@Model.Currency)</span><strong>@Model.Total.ToString("C", CultureInfo.GetCultureInfo("en-IE"))</strong></div>
+        </aside>
+    </div>
+</div>
+@section Scripts { <script src="~/js/order-confirmation.js" asp-append-version="true" defer></script> }

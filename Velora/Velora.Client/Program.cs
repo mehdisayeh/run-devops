@@ -1,7 +1,13 @@
+using Microsoft.AspNetCore.DataProtection;
+
 var builder = WebApplication.CreateBuilder(args);
+var protection = builder.Services.AddDataProtection().SetApplicationName("Velora.Client");
+if (builder.Configuration["DataProtection:KeysPath"] is { Length: > 0 } keysPath)
+    protection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddHttpClient("Products", client =>
 {
     var baseUrl = builder.Configuration["CatalogApiUrl"]

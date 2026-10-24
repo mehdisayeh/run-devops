@@ -36,7 +36,7 @@ Invoke-RestMethod http://localhost:5075/api/Product/1
 curl.exe -i http://localhost:5075/api/Product/2147483647
 ```
 
-The last command returns 404 when the ID is absent. The frontend continues using its existing `Api__BaseUrl` setting.
+The last command returns 404 when the ID is absent. The frontend continues using its existing `CatalogApiUrl` setting.
 
 ## Docker
 
@@ -59,7 +59,7 @@ Run the API on that network; this uses the existing MongoDB container and its da
 docker run --rm --name velora-api --network velora-network -p 5075:8080 -e MongoDB__ConnectionString=mongodb://velora-mongo:27017 -e MongoDB__DatabaseName=CatalogDb -e MongoDB__CollectionName=Products velora/catalog-api:mongodb
 ```
 
-Verify using the same HTTP commands above. When containerizing the storefront on the same network, set `Api__BaseUrl=http://velora-api:8080/`.
+Verify using the same HTTP commands above. When containerizing the storefront on the same network, set `CatalogApiUrl=http://velora-api:8080/`.
 
 ## Tests
 
@@ -99,3 +99,5 @@ docker compose -f Velora/docker-compose.yml -f Velora/docker-compose.override.ym
 ```
 
 The existing MongoDB container, volumes and external network remain in place.
+
+See [guest checkout and orders](../CHECKOUT.md) for order endpoints, replica-set setup, safe retries, and integration tests.

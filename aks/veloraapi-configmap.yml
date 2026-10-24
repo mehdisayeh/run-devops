@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: veloraapi-configmap
 data:
-  veloraapi_url: http://veloraapi-service:8080
+  veloraapi_url: http://veloraapi-service

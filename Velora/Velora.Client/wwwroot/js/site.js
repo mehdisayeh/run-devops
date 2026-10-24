@@ -63,6 +63,8 @@
         }
         document.getElementById('empty-cart').hidden = cart.length > 0;
         document.getElementById('clear-cart').hidden = cart.length === 0;
+        const checkoutLink = document.getElementById('checkout-link');
+        if (checkoutLink) checkoutLink.hidden = cart.length === 0;
         document.getElementById('cart-subtotal').textContent = money(cart.reduce((sum, i) => sum + byId.get(i.id).Price * i.quantity, 0));
     }
     document.getElementById('clear-cart')?.addEventListener('click', () => { cart = []; save(); renderCart(); notify('Your bag is now empty.'); });

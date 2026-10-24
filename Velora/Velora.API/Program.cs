@@ -4,6 +4,8 @@ using Velora.API.Data;
 using Velora.API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+MongoDB.Bson.Serialization.BsonSerializer.RegisterSerializer(
+    new MongoDB.Bson.Serialization.Serializers.DecimalSerializer(MongoDB.Bson.BsonType.Decimal128));
 
 // Add services to the container.
 
@@ -11,6 +13,8 @@ builder.Services.AddControllers();
 builder.Services.AddOptions<MongoDbSettings>()
     .BindConfiguration(MongoDbSettings.SectionName)
     .ValidateDataAnnotations()
+    .Validate(settings => !string.Equals(settings.CollectionName, "Orders", StringComparison.OrdinalIgnoreCase),
+        "The product collection cannot use the reserved Orders collection name.")
     .ValidateOnStart();
 builder.Services.AddSingleton<IMongoClient>(services =>
     new MongoClient(services.GetRequiredService<IOptions<MongoDbSettings>>().Value.ConnectionString));
@@ -22,7 +26,9 @@ builder.Services.AddSingleton<IMongoCollection<Product>>(services =>
         .GetCollection<Product>(settings.CollectionName);
 });
 builder.Services.AddScoped<IProductRepository, MongoProductRepository>();
+builder.Services.AddScoped<Velora.API.Services.IOrderService, Velora.API.Services.MongoOrderService>();
 builder.Services.AddHostedService<CatalogSeeder>();
+builder.Services.AddHostedService<OrderIndexes>();
 builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new() { Title = "Velora Catalog API", Version = "v1" }));
 
