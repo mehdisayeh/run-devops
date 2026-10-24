@@ -130,6 +130,14 @@ az aks install-cli
 
 
 --
+Create secret
+kubectl create secret docker-registry acr-secret --docker-server=veloradevacr.azurecr.io --docker-username=veloradevacr --docker-password="<YOUR_ACR_PASSWORD>"
+
+--
+check secret
+kubectl get secret
+
+--
 Connect to cluster using kubectl
 az aks get-credentials --resource-group veloraResourceGroup --name veloraAKSCluster
 
@@ -149,10 +157,16 @@ kubectl config use-context gcpcluster-k8s-1
 	Switched to context "gcpcluster-k8s-1"
 
 
+
 --
 Deploy microservices to AKS
 
 kubectl apply -f .\aks\
+
+
+--
+Scale microservices in aks
+
 
 
 --

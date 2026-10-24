@@ -1,0 +1,25 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: veloraapi-hpa
+spec:
+  maxReplicas: 10 # define max replica count
+  minReplicas: 2  # define min replica count
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: veloraapi-deployment
+  targetCPUUtilizationPercentage: 50 # target CPU utilization
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: veloraclient-hpa
+spec:
+  maxReplicas: 10 # define max replica count
+  minReplicas: 3  # define min replica count
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: veloraclient-deployment
+  targetCPUUtilizationPercentage: 50 # target CPU utilization
