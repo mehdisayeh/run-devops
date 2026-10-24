@@ -13,7 +13,7 @@ public sealed class MongoCheckoutFactAttribute : FactAttribute
     public MongoCheckoutFactAttribute()
     {
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("VELORA_CHECKOUT_TEST_MONGO")))
-            Skip = "Set VELORA_CHECKOUT_TEST_MONGO to an isolated replica-set MongoDB URI.";
+            Skip = "Set VELORA_CHECKOUT_TEST_MONGO to an isolated MongoDB URI (standalone is supported).";
     }
 }
 
@@ -41,70 +41,58 @@ public class CheckoutMongoTests
 
     private static async Task<PlaceOrderRequest> Request(MongoOrderService service, params CartLineRequest[] items)
     {
-        var quote = await service.QuoteAsync(new() { Items = items.ToList() }, default);
+        await Task.CompletedTask;
         return new()
         {
-            Items = items.ToList(), ExpectedTotal = quote.Total, QuoteVersion = quote.Version,
-            IdempotencyKey = Guid.NewGuid().ToString("N"),
+            Items = items.ToList(),
             Address = new() { FullName = "Test Guest", Email = "guest@example.test", Line1 = "1 Test Street", City = "Paris", PostalCode = "75001", Country = "France" }
         };
     }
 
     [MongoCheckoutFact]
-    public Task ConcurrentRetriesCreateOneOrderAndDeductStockOnce() => WithStore(async (db, service, products) =>
+    public Task OrderDeductsStockAndSavesReceipt() => WithStore(async (db, service, products) =>
     {
-        var request = await Request(service, new CartLineRequest { ProductId = 2, Quantity = 1 });
-        var orders = await Task.WhenAll(Enumerable.Range(0, 6).Select(_ => service.PlaceAsync(request, default)));
-        Assert.Single(orders.Select(o => o.Id).Distinct());
-        Assert.Equal(0, (await products.Find(p => p.Id == 2).SingleAsync()).StockQuantity);
+        var request = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 2 });
+        var receipt = await service.PlaceAsync(request, default);
+        Assert.Equal(3, (await products.Find(p => p.Id == 1).SingleAsync()).StockQuantity);
+        Assert.Equal(25m, receipt.Total);
+        Assert.Equal("Placed", receipt.Status);
+        Assert.Equal(receipt.Total, (await service.GetAsync(receipt.Id, default))!.Total);
         Assert.Equal(1, await db.GetCollection<StoredOrder>("Orders").CountDocumentsAsync(FilterDefinition<StoredOrder>.Empty));
-        Assert.Equal(orders[0].Id, (await service.PlaceAsync(request, default)).Id);
-        Assert.Equal(orders[0].Total, (await service.GetAsync(orders[0].Id, default))!.Total);
-        request.Address.City = "Lyon";
-        Assert.Equal(409, (await Assert.ThrowsAsync<CheckoutException>(() => service.PlaceAsync(request, default))).StatusCode);
     });
 
     [MongoCheckoutFact]
-    public Task CompetingOrdersCannotOversellOrPartiallyDeductAnotherProduct() => WithStore(async (db, service, products) =>
+    public Task ConcurrentOrdersCannotMakeStockNegative() => WithStore(async (db, service, products) =>
     {
-        var first = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 2 }, new() { ProductId = 2, Quantity = 1 });
-        var second = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 2 }, new() { ProductId = 2, Quantity = 1 });
-        async Task<bool> Place(PlaceOrderRequest request)
+        async Task<bool> Place()
         {
-            try { await service.PlaceAsync(request, default); return true; }
+            try { await service.PlaceAsync(await Request(service, new CartLineRequest { ProductId = 2, Quantity = 1 }), default); return true; }
             catch (CheckoutException ex) when (ex.StatusCode == 409) { return false; }
         }
-        var outcomes = await Task.WhenAll(Place(first), Place(second));
+        var outcomes = await Task.WhenAll(Enumerable.Range(0, 6).Select(_ => Place()));
         Assert.Single(outcomes, success => success);
-        Assert.Equal(3, (await products.Find(p => p.Id == 1).SingleAsync()).StockQuantity);
         Assert.Equal(0, (await products.Find(p => p.Id == 2).SingleAsync()).StockQuantity);
         Assert.Equal(1, await db.GetCollection<StoredOrder>("Orders").CountDocumentsAsync(FilterDefinition<StoredOrder>.Empty));
     });
 
     [MongoCheckoutFact]
-    public Task ChangedPricesAndTamperedTotalsDoNotCreateOrders() => WithStore(async (db, service, products) =>
+    public Task InsufficientStockDoesNotSaveOrderOrDeductOtherProducts() => WithStore(async (db, service, products) =>
     {
-        var request = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 1 });
-        request.ExpectedTotal = 0.01m;
-        await Assert.ThrowsAsync<CheckoutException>(() => service.PlaceAsync(request, default));
-        request.ExpectedTotal = 12.50m;
-        await products.UpdateOneAsync(p => p.Id == 1, Builders<Product>.Update.Set(p => p.Price, 13m));
+        var request = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 2 }, new() { ProductId = 2, Quantity = 2 });
         await Assert.ThrowsAsync<CheckoutException>(() => service.PlaceAsync(request, default));
         Assert.Equal(5, (await products.Find(p => p.Id == 1).SingleAsync()).StockQuantity);
         Assert.Equal(0, await db.GetCollection<StoredOrder>("Orders").CountDocumentsAsync(FilterDefinition<StoredOrder>.Empty));
     });
 
     [MongoCheckoutFact]
-    public Task DatabaseFailureAfterOrderInsertRollsBackEntireTransaction() => WithStore(async (db, service, products) =>
+    public Task RejectedOrderInsertReturnsDeductedStock() => WithStore(async (db, service, products) =>
     {
-        var request = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 1 });
-        // Force the subsequent inventory write to fail after inserting the order.
         await db.RunCommandAsync<BsonDocument>(new BsonDocument
         {
-            { "collMod", "Products" }, { "validator", new BsonDocument("StockQuantity", new BsonDocument("$gte", 5)) }
+            { "collMod", "Orders" }, { "validator", new BsonDocument("impossible", new BsonDocument("$exists", true)) }
         });
+        var request = await Request(service, new CartLineRequest { ProductId = 1, Quantity = 2 });
         await Assert.ThrowsAsync<MongoWriteException>(() => service.PlaceAsync(request, default));
         Assert.Equal(5, (await products.Find(p => p.Id == 1).SingleAsync()).StockQuantity);
-        Assert.Equal(0, await db.GetCollection<StoredOrder>("Orders").CountDocumentsAsync(FilterDefinition<StoredOrder>.Empty));
     });
 }

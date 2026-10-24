@@ -167,7 +167,31 @@ kubectl apply -f .\aks\
 --
 Scale microservices in aks
 
+kubectl get all
 
+kubectl scale --replicas=3 deployment.apps/veloraclient-deployment
+
+kubectl get pod -o wide
+
+kubectl get pod --watch
+
+kubectl logs deployment/veloraapi-deployment --tail=50
+
+
+--
+Stop AKS
+az aks stop --resource-group veloraResourceGroup --name veloraAKSCluster
+
+This stops your AKS cluster and its worker node, suspending VM compute charges.
+
+
+Start AKS
+az aks start --resource-group veloraResourceGroup --name veloraAKSCluster
+Your Kubernetes Deployments, Services and configuration are preserved.
+
+Check cluster status
+
+az aks show -g veloraResourceGroup -n veloraAKSCluster --query "{Name:name,PowerState:powerState.code,ProvisioningState:provisioningState}" -o table
 
 --
 Clean All AKS and Azure Resources

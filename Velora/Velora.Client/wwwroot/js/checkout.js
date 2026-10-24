@@ -7,9 +7,9 @@
     const submit = document.getElementById('place-order');
     const fields = document.getElementById('checkout-fields');
     const refresh = document.getElementById('refresh-quote');
-    const cartKey = 'forme.cart.v1', pendingKey = 'velora.checkout.pending.v1';
+    const cartKey = 'forme.cart.v1';
     const money = value => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(value);
-    let quote, items, pending, busy = false;
+    let quote, items, busy = false;
     const showError = message => { error.textContent = message; error.hidden = false; };
     function render(summary) {
         const lines = document.getElementById('checkout-lines');
@@ -24,7 +24,7 @@
     async function post(action, body) {
         const response = await fetch(`/Checkout/${action}`, {
             method: 'POST', mode: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-Checkout-Request': '1' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
         let data;
@@ -32,7 +32,6 @@
         if (!response.ok) {
             const failure = new Error(data.detail || Object.values(data.errors || {}).flat().join(' ') || 'Checkout could not complete. Please try again.');
             failure.status = response.status;
-            failure.definitive = response.headers.get('X-Checkout-Definitive') === 'true';
             throw failure;
         }
         return data;
@@ -52,65 +51,35 @@
             form.hidden = false; fields.disabled = true; refresh.hidden = false;
         }
     }
-    function finish(receipt) {
-        if (!receipt?.id || !/^[a-f0-9]{64}$/.test(receipt.id)) throw new Error('The order response was incomplete. Retry the same submission.');
-        // Persist the result before changing the bag; reloading must never submit or clear twice.
-        sessionStorage.setItem(pendingKey, JSON.stringify({ receiptId: receipt.id }));
-        try {
-            const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
-            const remaining = cart.map(item => ({ ...item, quantity: item.quantity -
-                (pending.request.items.find(i => i.productId === item.id)?.quantity || 0) })).filter(i => i.quantity > 0);
-            localStorage.setItem(cartKey, JSON.stringify(remaining));
-        } catch { /* The receipt remains available even if bag storage fails. */ }
-        location.replace(`/Checkout/Confirmation?id=${encodeURIComponent(receipt.id)}`);
-    }
     form.addEventListener('submit', async event => {
         event.preventDefault();
-        if (busy || (!pending && (!quote || !form.reportValidity()))) return;
+        if (busy || !quote || !form.reportValidity()) return;
+        busy = true;
+        submit.disabled = true;
+        fields.disabled = true;
         error.hidden = true;
-        if (!pending) {
-            const address = Object.fromEntries(['fullName', 'email', 'line1', 'line2', 'city', 'postalCode', 'country']
-                .map(name => [name, form.elements[name].value.trim()]));
-            pending = { request: { items, address, expectedTotal: quote.total, quoteVersion: quote.version,
-                idempotencyKey: Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('') }, summary: quote };
-            try { sessionStorage.setItem(pendingKey, JSON.stringify(pending)); }
-            catch { pending = null; showError('Enable browser session storage before placing an order so retries can be handled safely.'); return; }
-        }
-        busy = true; submit.disabled = true; fields.disabled = true; refresh.hidden = true;
-        status.textContent = 'Placing your order…';
-        try { finish(await post('Place', pending.request)); }
-        catch (failure) {
+        status.textContent = 'Placing your order?';
+        const address = Object.fromEntries(['fullName', 'email', 'line1', 'line2', 'city', 'postalCode', 'country']
+            .map(name => [name, form.elements[name].value.trim()]));
+        try {
+            const receipt = await post('Place', { items, address });
+            const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+            const remaining = cart.map(item => ({ ...item, quantity: item.quantity -
+                (items.find(line => line.productId === item.id)?.quantity || 0) })).filter(item => item.quantity > 0);
+            try { localStorage.setItem(cartKey, JSON.stringify(remaining)); } catch { /* Still show the saved order. */ }
+            location.replace(`/Checkout/Confirmation?id=${encodeURIComponent(receipt.id)}`);
+        } catch (failure) {
             showError(failure.message);
-            // 5xx/network/unknown responses may have committed. Keep the exact key and payload.
-            if (failure.definitive && [400, 409, 422].includes(failure.status)) {
-                sessionStorage.removeItem(pendingKey); pending = null; quote = null;
-                submit.disabled = true; refresh.hidden = false;
-                status.textContent = 'Review updated prices and stock before submitting again.';
+            if (failure.status === 400 || failure.status === 409 || failure.status === 422) {
+                fields.disabled = false;
+                refresh.hidden = false;
+                status.textContent = 'Update your bag or details and try again.';
             } else {
-                submit.disabled = false; submit.textContent = 'Retry same order';
-                status.textContent = 'The outcome is not confirmed. Use Retry same order to avoid a duplicate order.';
+                // No automatic retries: the server may have saved the order.
+                status.textContent = 'Order outcome is unknown. Check with the store before submitting again.';
             }
         } finally { busy = false; }
     });
     refresh.addEventListener('click', loadQuote);
-    async function init() {
-        try {
-            sessionStorage.setItem('velora.checkout.storage-test', '1'); sessionStorage.removeItem('velora.checkout.storage-test');
-            pending = JSON.parse(sessionStorage.getItem(pendingKey) || 'null');
-            if (pending?.receiptId) {
-                // A later checkout is a new purchase; a reload after a completed response goes to its receipt.
-                location.replace(`/Checkout/Confirmation?id=${encodeURIComponent(pending.receiptId)}`); return;
-            }
-            if (pending?.request) {
-                render(pending.summary); form.hidden = false; fields.disabled = true;
-                Object.entries(pending.request.address).forEach(([key, value]) => { form.elements[key].value = value || ''; });
-                submit.textContent = 'Retry same order';
-                status.textContent = 'A previous submission needs confirmation. Retry the same order safely.';
-                return;
-            }
-            await loadQuote();
-        } catch { showError('Browser storage is unavailable or invalid. Enable storage and reload checkout.'); }
-    }
-    init();
-    window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
+    loadQuote();
 })();

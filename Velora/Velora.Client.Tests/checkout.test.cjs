@@ -47,60 +47,39 @@ function setup(responses, options = {}) {
         settle: () => new Promise(resolve => setImmediate(resolve)) };
 }
 
-test('successful order clears only purchased quantities and saves receipt before redirect', async () => {
+test('checkout sends only items and address, deducts the bag, and opens receipt', async () => {
     const app = setup([{ body: quote }, { body: receipt }]);
     await app.settle();
-    // Preserve products added in another tab after the reviewed quote.
-    app.local.setItem(cartKey, JSON.stringify([{ id: 1, quantity: 3 }, { id: 2, quantity: 1 }]));
     await app.submit();
-    for (const request of app.requests) {
-        assert.equal(request.headers['X-Checkout-Request'], '1');
-        assert.equal(request.mode, 'same-origin');
-        assert.equal(request.headers['X-CSRF-TOKEN'], undefined);
-    }
-    assert.equal(app.requests[1].body.expectedTotal, 20);
-    assert.equal(app.requests[1].body.quoteVersion, quote.version);
-    assert.match(app.requests[1].body.idempotencyKey, /^[a-f0-9]{32}$/);
-    assert.deepEqual(JSON.parse(app.local.getItem(cartKey)), [{ id: 1, quantity: 1 }, { id: 2, quantity: 1 }]);
-    assert.equal(JSON.parse(app.session.getItem(pendingKey)).receiptId, receipt.id);
+    const sent = app.requests[1];
+    assert.deepEqual(Object.keys(sent.body).sort(), ['address', 'items']);
+    assert.equal(sent.headers['X-Checkout-Request'], undefined);
+    assert.equal(sent.headers['X-CSRF-TOKEN'], undefined);
+    assert.deepEqual(JSON.parse(app.local.getItem(cartKey)), []);
     assert.equal(app.redirects[0], `/Checkout/Confirmation?id=${receipt.id}`);
 });
 
-test('network failure freezes payload and retries exactly the same key and address', async () => {
-    const app = setup([{ body: quote }, new Error('Connection lost'), { body: receipt }]);
+test('insufficient stock displays error and allows refreshing the quote', async () => {
+    const app = setup([{ body: quote }, { status: 409, body: { detail: 'Not enough stock' } }]);
     await app.settle(); await app.submit();
-    assert.equal(app.get('checkout-fields').disabled, true);
-    assert.equal(app.get('place-order').textContent, 'Retry same order');
-    app.form.elements.city.value = 'Changed after submission';
-    await app.submit();
-    assert.deepEqual(app.requests[1].body, app.requests[2].body);
-});
-
-test('reload after uncertain submission restores request without fetching a new quote', async () => {
-    const first = setup([{ body: quote }, new Error('Connection lost')]);
-    await first.settle(); await first.submit();
-    const next = setup([{ body: receipt }], { session: first.session, local: first.local });
-    await next.settle();
-    assert.equal(next.requests.length, 0);
-    assert.equal(next.get('place-order').textContent, 'Retry same order');
-    await next.submit();
-    assert.deepEqual(next.requests[0].body, first.requests[1].body);
-});
-
-test('definitive quote conflict requires fresh review before another submission', async () => {
-    const app = setup([{ body: quote }, { status: 409, definitive: true, body: { detail: 'Stock changed' } }]);
-    await app.settle(); await app.submit();
-    assert.equal(app.session.getItem(pendingKey), null);
-    assert.equal(app.get('place-order').disabled, true);
+    assert.equal(app.get('checkout-error').textContent, 'Not enough stock');
     assert.equal(app.get('refresh-quote').hidden, false);
-    assert.equal(app.get('checkout-error').textContent, 'Stock changed');
+    assert.equal(JSON.parse(app.local.getItem(cartKey)).length, 1);
 });
 
-test('middleware errors never discard an uncertain order submission key', async () => {
-    const app = setup([{ body: quote }, { status: 400, body: {} }]);
+test('network failure keeps bag and does not automatically retry', async () => {
+    const app = setup([{ body: quote }, new Error('Connection lost')]);
     await app.settle(); await app.submit();
-    assert.ok(JSON.parse(app.session.getItem(pendingKey)).request.idempotencyKey);
-    assert.equal(app.get('place-order').textContent, 'Retry same order');
+    assert.equal(app.requests.length, 2);
+    assert.equal(app.get('place-order').disabled, true);
+    assert.match(app.get('checkout-status').textContent, /unknown/);
+    assert.equal(JSON.parse(app.local.getItem(cartKey)).length, 1);
+});
+
+test('checkout works without session storage', async () => {
+    const app = setup([{ body: quote }, { body: receipt }], { session: { getItem() { throw new Error('Disabled'); }, setItem() { throw new Error('Disabled'); } } });
+    await app.settle(); await app.submit();
+    assert.equal(app.redirects.length, 1);
 });
 
 test('empty bag cannot be submitted', async () => {
@@ -108,12 +87,4 @@ test('empty bag cannot be submitted', async () => {
     await app.settle(); await app.submit();
     assert.equal(app.requests.length, 0);
     assert.match(app.get('checkout-error').textContent, /bag is empty/);
-});
-
-test('session storage failure prevents order submission', async () => {
-    const broken = { ...storage(), setItem() { throw new Error('Storage disabled'); } };
-    const app = setup([], { session: broken });
-    await app.settle(); await app.submit();
-    assert.equal(app.requests.length, 0);
-    assert.match(app.get('checkout-error').textContent, /storage is unavailable/);
 });

@@ -1,6 +1,5 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Velora.Contracts;
 
 namespace Velora.Client.Controllers;
@@ -11,20 +10,6 @@ public sealed class CheckoutController(IHttpClientFactory clients, ILogger<Check
 {
     [HttpGet]
     public IActionResult Index() => View();
-
-    // A custom header forces browser cross-origin requests through CORS preflight.
-    // Keep this frontend same-origin: do not enable permissive CORS for checkout.
-    public override void OnActionExecuting(ActionExecutingContext context)
-    {
-        if (HttpMethods.IsPost(Request.Method) &&
-            (Request.Headers["X-Checkout-Request"] != "1" ||
-             (Request.Headers.TryGetValue("Sec-Fetch-Site", out var site) && site != "same-origin")))
-        {
-            context.Result = Problem(statusCode: 403, detail: "Open checkout on this site and try again.");
-            return;
-        }
-        base.OnActionExecuting(context);
-    }
 
     [HttpPost, Consumes("application/json")]
     public Task<IActionResult> Quote([FromBody] CartRequest request, CancellationToken ct) =>
@@ -76,7 +61,7 @@ public sealed class CheckoutController(IHttpClientFactory clients, ILogger<Check
         catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException && !ct.IsCancellationRequested)
         {
             logger.LogWarning("Checkout service unavailable");
-            return Problem(statusCode: 503, detail: "The order service is temporarily unavailable. Retry the same submission to safely check the outcome.");
+            return Problem(statusCode: 503, detail: "The order service is temporarily unavailable. Check whether your order was saved before submitting again.");
         }
     }
 }

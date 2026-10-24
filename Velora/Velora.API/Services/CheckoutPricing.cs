@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text.Json;
 using Velora.API.Models;
 using Velora.Contracts;
 
@@ -31,22 +29,9 @@ public static class CheckoutPricing
             if (product is null) throw new CheckoutException(409, $"Product {item.ProductId} is no longer available. Update your bag.");
             if (product.StockQuantity < item.Quantity)
                 throw new CheckoutException(409, $"Only {product.StockQuantity} of {product.Name} are available. Update your bag.");
-            if (product.Currency != "EUR" || product.Price <= 0 || product.Price != decimal.Round(product.Price, 2))
-                throw new CheckoutException(409, $"{product.Name} cannot currently be ordered.");
             lines.Add(new(product.Id, product.Sku, product.Name, item.Quantity, product.Price));
         }
-        return new(lines, lines.Sum(i => i.LineTotal), "EUR", Hash(lines));
+        return new(lines, lines.Sum(i => i.LineTotal), "EUR");
     }
 
-    public static string Hash<T>(T value) => Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(value)));
-
-    public static string Fingerprint(PlaceOrderRequest request, List<CartLineRequest> items) =>
-        Hash(new { Items = items, request.Address, request.ExpectedTotal, request.QuoteVersion });
-
-    public static OrderReceipt Replay(StoredOrder existing, string fingerprint)
-    {
-        if (existing.Fingerprint != fingerprint)
-            throw new CheckoutException(409, "This submission key was already used for a different order. Start a new checkout.");
-        return existing.Receipt;
-    }
 }

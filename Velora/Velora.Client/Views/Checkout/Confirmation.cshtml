@@ -11,7 +11,7 @@
             <address>@Model.Address.FullName<br />@Model.Address.Line1<br />
                 @if (!string.IsNullOrWhiteSpace(Model.Address.Line2)) { @Model.Address.Line2<br /> }
                 @Model.Address.PostalCode @Model.Address.City<br />@Model.Address.Country</address>
-            <p>Contact: @Model.Address.Email</p><p>No payment has been collected. This confirmation records your order; it does not confirm payment or dispatch.</p>
+            <p>Contact: @Model.Address.Email</p><p>No payment has been collected. This confirmation records your order. No payment has been collected and dispatch is not confirmed.</p>
             <a asp-controller="Home" asp-action="Index" class="button button-dark">Continue shopping</a>
         </section>
         <aside class="cart-summary"><h2>Order summary</h2>

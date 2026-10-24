@@ -18,7 +18,7 @@ spec:
         - name: acr-secret
       containers:
         - name: veloraapi
-          image: veloradevacr.azurecr.io/veloraapi:v2
+          image: veloradevacr.azurecr.io/veloraapi:v3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

@@ -28,12 +28,7 @@ public sealed class ShippingAddress
 public sealed class PlaceOrderRequest : CartRequest
 {
     [Required] public ShippingAddress Address { get; set; } = new();
-    [Range(typeof(decimal), "0.01", "100000000")]
-    public decimal ExpectedTotal { get; set; }
-    [Required, RegularExpression("^[a-fA-F0-9]{64}$")]
-    public string QuoteVersion { get; set; } = "";
-    [Required, RegularExpression("^[a-fA-F0-9]{32}$")]
-    public string IdempotencyKey { get; set; } = "";
+
 }
 
 public sealed record OrderLine(int ProductId, string Sku, string Name, int Quantity, decimal UnitPrice)
@@ -41,7 +36,7 @@ public sealed record OrderLine(int ProductId, string Sku, string Name, int Quant
     public decimal LineTotal => UnitPrice * Quantity;
 }
 
-public sealed record CheckoutQuote(List<OrderLine> Items, decimal Total, string Currency, string Version);
+public sealed record CheckoutQuote(List<OrderLine> Items, decimal Total, string Currency);
 
 public sealed class OrderReceipt
 {

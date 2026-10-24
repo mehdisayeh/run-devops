@@ -31,13 +31,13 @@ public sealed class OrdersController(IOrderService orders, ILogger<OrdersControl
         try { return Ok(await action()); }
         catch (CheckoutException ex)
         {
-            if (ex.StatusCode >= 500) logger.LogError(ex, "Checkout storage is not configured for transactions");
+            if (ex.StatusCode >= 500) logger.LogError(ex, "Checkout request failed");
             return Problem(statusCode: ex.StatusCode, detail: ex.Message);
         }
         catch (Exception ex) when (ex is MongoException or TimeoutException)
         {
             logger.LogError(ex, "Order storage request failed");
-            return Problem(statusCode: 503, detail: "Order storage is temporarily unavailable. Retry the same submission; do not start a new order.");
+            return Problem(statusCode: 503, detail: "Order storage is temporarily unavailable. Check whether your order was saved before submitting again.");
         }
     }
 }
