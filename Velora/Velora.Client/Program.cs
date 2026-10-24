@@ -13,7 +13,7 @@ builder.Services.AddHttpClient("Products", client =>
     var baseUrl = builder.Configuration["CatalogApiUrl"]
         ?? throw new InvalidOperationException("CatalogApiUrl must be configured.");
     client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = TimeSpan.FromSeconds(60);
 });
 builder.Services.AddScoped<Velora.Client.Services.ProductApiClient>(services =>
     new(services.GetRequiredService<IHttpClientFactory>().CreateClient("Products")));
