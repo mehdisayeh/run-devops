@@ -23,8 +23,8 @@
     }
     async function post(action, body) {
         const response = await fetch(`/Checkout/${action}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': form.querySelector('[name="__RequestVerificationToken"]').value },
+            method: 'POST', mode: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Checkout-Request': '1' },
             body: JSON.stringify(body)
         });
         let data;
@@ -33,8 +33,6 @@
             const failure = new Error(data.detail || Object.values(data.errors || {}).flat().join(' ') || 'Checkout could not complete. Please try again.');
             failure.status = response.status;
             failure.definitive = response.headers.get('X-Checkout-Definitive') === 'true';
-            if (response.status === 400 && !failure.definitive)
-                failure.message = 'Checkout security validation expired. Reload this page, then retry the same order.';
             throw failure;
         }
         return data;

@@ -6,7 +6,6 @@
     <div id="checkout-status" role="status" aria-live="polite">Checking your bag…</div>
     <div id="checkout-error" class="checkout-error" role="alert" hidden></div>
     <form id="checkout-form" class="cart-layout" hidden>
-        @Html.AntiForgeryToken()
         <fieldset id="checkout-fields" class="checkout-fields">
             <legend>Contact &amp; delivery address</legend>
             <label for="fullName">Full name<input id="fullName" name="fullName" autocomplete="shipping name" maxlength="100" required /></label>

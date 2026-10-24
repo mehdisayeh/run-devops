@@ -25,7 +25,6 @@ function setup(responses, options = {}) {
     const form = get('checkout-form');
     form.elements = Object.fromEntries(['fullName', 'email', 'line1', 'line2', 'city', 'postalCode', 'country'].map(key => [key, node()]));
     form.reportValidity = () => true;
-    form.querySelector = () => ({ value: 'csrf-test' });
     const local = options.local || storage({ [cartKey]: JSON.stringify([{ id: 1, quantity: 2 }]) });
     const session = options.session || storage();
     const requests = [], redirects = [];
@@ -35,7 +34,7 @@ function setup(responses, options = {}) {
         sessionStorage: session, localStorage: local,
         location: { replace: value => redirects.push(value), reload() {} },
         fetch: async (url, request) => {
-            requests.push({ url, body: JSON.parse(request.body) });
+            requests.push({ url, headers: request.headers, mode: request.mode, body: JSON.parse(request.body) });
             const response = responses.shift();
             if (response instanceof Error) throw response;
             if (!response) throw new Error('Unexpected request');
@@ -54,6 +53,11 @@ test('successful order clears only purchased quantities and saves receipt before
     // Preserve products added in another tab after the reviewed quote.
     app.local.setItem(cartKey, JSON.stringify([{ id: 1, quantity: 3 }, { id: 2, quantity: 1 }]));
     await app.submit();
+    for (const request of app.requests) {
+        assert.equal(request.headers['X-Checkout-Request'], '1');
+        assert.equal(request.mode, 'same-origin');
+        assert.equal(request.headers['X-CSRF-TOKEN'], undefined);
+    }
     assert.equal(app.requests[1].body.expectedTotal, 20);
     assert.equal(app.requests[1].body.quoteVersion, quote.version);
     assert.match(app.requests[1].body.idempotencyKey, /^[a-f0-9]{32}$/);

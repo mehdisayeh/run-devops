@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Velora.Contracts;
 
 namespace Velora.Client.Controllers;
@@ -11,11 +12,25 @@ public sealed class CheckoutController(IHttpClientFactory clients, ILogger<Check
     [HttpGet]
     public IActionResult Index() => View();
 
-    [HttpPost, ValidateAntiForgeryToken]
+    // A custom header forces browser cross-origin requests through CORS preflight.
+    // Keep this frontend same-origin: do not enable permissive CORS for checkout.
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (HttpMethods.IsPost(Request.Method) &&
+            (Request.Headers["X-Checkout-Request"] != "1" ||
+             (Request.Headers.TryGetValue("Sec-Fetch-Site", out var site) && site != "same-origin")))
+        {
+            context.Result = Problem(statusCode: 403, detail: "Open checkout on this site and try again.");
+            return;
+        }
+        base.OnActionExecuting(context);
+    }
+
+    [HttpPost, Consumes("application/json")]
     public Task<IActionResult> Quote([FromBody] CartRequest request, CancellationToken ct) =>
         Forward("api/orders/quote", request, ct);
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpPost, Consumes("application/json")]
     public Task<IActionResult> Place([FromBody] PlaceOrderRequest request, CancellationToken ct) =>
         Forward("api/orders", request, ct);
 
