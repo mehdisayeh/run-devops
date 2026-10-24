@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: veloraapi-deployment
+  labels:
+    app: veloraapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: veloraapi
+  template:
+    metadata:
+      labels:
+        app: veloraapi
+    spec:
+      containers:
+        - name: veloraapi
+          image: mehdisayeh/veloraapi:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-root-username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-root-password
+            - name: MongoDB__ConnectionString
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@mongo-service:27017/?authSource=admin"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: veloraapi-service
+spec:
+  type: NodePort
+  selector:
+    app: veloraapi
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8080
+      nodePort: 31000
