@@ -11,7 +11,7 @@ resources:
 variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: 'dcede5b2-f96e-44e7-9dfc-a4430bbd4068'
-  imageRepository: 'velorarundevops'
+  imageRepository: 'veloraapi'
   containerRegistry: 'veloradevacr.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/Velora/Velora.API/Dockerfile'
   tag: '$(Build.BuildId)'
