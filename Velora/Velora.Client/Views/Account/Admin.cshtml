@@ -1,0 +1,8 @@
+@model List<Velora.Contracts.CustomerSummary>
+@{ ViewData["Title"] = "Customer administration"; }
+<div class="shell account-page"><a asp-action="Profile" class="text-link">Back to your account</a><p class="eyebrow">ADMINISTRATION</p><h1>Customers.</h1>
+    <p>The 100 most recently registered customers.</p>
+    <div class="account-table"><table><thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Joined</th></tr></thead><tbody>
+        @foreach (var customer in Model) { <tr><td>@customer.FullName</td><td>@customer.Email</td><td>@string.Join(", ", customer.Roles)</td><td>@customer.CreatedAtUtc.ToString("yyyy-MM-dd")</td></tr> }
+    </tbody></table></div>
+</div>

@@ -8,5 +8,6 @@ public sealed class StoredOrder
 {
     // Internal MongoDB order document identifier.
     [BsonId] public string IdempotencyKey { get; set; } = "";
+    public string? CustomerId { get; set; }
     public OrderReceipt Receipt { get; set; } = new();
 }

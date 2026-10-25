@@ -1,6 +1,6 @@
 # VELORA storefront
 
-ASP.NET Core MVC (.NET 9) with the existing Bootstrap 5.3.3 assets and vanilla JavaScript. The product catalog is served by the Velora.API project. Guest checkout records unpaid orders in MongoDB through the API. No authentication or payment processing. See [checkout setup](../CHECKOUT.md).
+ASP.NET Core MVC (.NET 9) with the existing Bootstrap 5.3.3 assets and vanilla JavaScript. The product catalog is served by the Velora.API project. Guest checkout records unpaid orders in MongoDB through the API. Customer accounts are supported; payment processing is not included. See [checkout setup](../CHECKOUT.md).
 
 ## Run
 
@@ -44,3 +44,5 @@ The API exposes GET /api/Product and GET /api/Product/{id} (404 for unknown IDs)
 Accessibility includes labeled controls, semantic landmarks, keyboard focus styles, live search/cart announcements, a skip link and reduced-motion support. The layout adapts at 1100px and 767px; product grids use two columns on mobile. Typography uses Google Fonts with local system fallbacks.
 
 See [guest checkout and orders](../CHECKOUT.md) for order endpoints, order endpoints and integration tests.
+
+See [customer accounts](../ACCOUNTS.md) for registration, sign-in, profiles, saved addresses, customer/admin rules, deployment and verification.

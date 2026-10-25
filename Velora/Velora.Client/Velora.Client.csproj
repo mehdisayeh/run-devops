@@ -15,5 +15,6 @@
 
   <ItemGroup>
     <Compile Include="../Shared/CheckoutContracts.cs" Link="Contracts/CheckoutContracts.cs" />
+    <Compile Include="../Shared/AccountContracts.cs" Link="Contracts/AccountContracts.cs" />
   </ItemGroup>
 </Project>

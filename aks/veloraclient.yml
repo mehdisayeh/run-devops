@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: velora-client-keys
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile-csi
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +26,8 @@ spec:
       labels:
         app: veloraclient
     spec:
+      securityContext:
+        fsGroup: 1654
       imagePullSecrets: 
         - name: acr-secret
       containers:
@@ -23,6 +37,8 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: DataProtection__KeysPath
+              value: /var/velora/keys
             - name: ASPNETCORE_ENVIRONMENT
               value: Development
             - name: CatalogApiUrl
@@ -30,6 +46,9 @@ spec:
                   configMapKeyRef:
                     name: veloraapi-configmap
                     key: veloraapi_url
+          volumeMounts:
+            - name: account-keys
+              mountPath: /var/velora/keys
           resources:
             requests:
               memory: "64Mi"
@@ -37,6 +56,10 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "500m"
+      volumes:
+        - name: account-keys
+          persistentVolumeClaim:
+            claimName: velora-client-keys
 ---
 apiVersion: v1
 kind: Service

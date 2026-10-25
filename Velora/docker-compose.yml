@@ -13,3 +13,6 @@ services:
 
   velora.db:
     image: mongo
+
+volumes:
+  velora-client-keys:

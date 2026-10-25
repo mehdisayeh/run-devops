@@ -1,0 +1,17 @@
+@model Velora.Contracts.ShippingAddress
+@{ ViewData["Title"] = "Save an address"; }
+<div class="shell account-page account-narrow">
+    <a asp-action="Profile" class="text-link">Back to your account</a><h1>Delivery address.</h1>
+    <form asp-action="SaveAddress" method="post" class="account-form">
+        <input type="hidden" name="id" value="@ViewData["AddressId"]" />
+        <div asp-validation-summary="All" role="alert" class="validation-summary"></div>
+        <label asp-for="FullName">Full name</label><input asp-for="FullName" autocomplete="shipping name" maxlength="100" required />
+        <label asp-for="Email">Contact email</label><input asp-for="Email" type="email" autocomplete="email" maxlength="254" required />
+        <label asp-for="Line1">Address line 1</label><input asp-for="Line1" autocomplete="shipping address-line1" maxlength="200" required />
+        <label asp-for="Line2">Address line 2 (optional)</label><input asp-for="Line2" autocomplete="shipping address-line2" maxlength="200" />
+        <label asp-for="City">City</label><input asp-for="City" autocomplete="shipping address-level2" maxlength="100" required />
+        <label asp-for="PostalCode">Postal code</label><input asp-for="PostalCode" autocomplete="shipping postal-code" maxlength="30" required />
+        <label asp-for="Country">Country</label><input asp-for="Country" autocomplete="shipping country-name" maxlength="100" required />
+        <button class="button button-dark" type="submit">Save address</button>
+    </form>
+</div>

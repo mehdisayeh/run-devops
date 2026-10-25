@@ -1,0 +1,14 @@
+@model Velora.Contracts.LoginRequest
+@{ ViewData["Title"] = "Sign in"; }
+<div class="shell account-page account-narrow">
+    <p class="eyebrow">YOUR VELORA</p><h1>Welcome back.</h1>
+    @if (TempData["AccountMessage"] is string message) { <p class="account-notice" role="status">@message</p> }
+    <form asp-action="Login" method="post" class="account-form">
+        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+        <div asp-validation-summary="All" role="alert" class="validation-summary"></div>
+        <label asp-for="Email">Email</label><input asp-for="Email" type="email" autocomplete="username" maxlength="254" required />
+        <label asp-for="Password">Password</label><input asp-for="Password" type="password" autocomplete="current-password" maxlength="128" required />
+        <button class="button button-dark" type="submit">Sign in</button>
+    </form>
+    <p>New here? <a asp-action="Register" class="text-link">Create an account</a></p>
+</div>

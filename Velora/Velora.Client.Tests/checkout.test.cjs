@@ -25,11 +25,13 @@ function setup(responses, options = {}) {
     const form = get('checkout-form');
     form.elements = Object.fromEntries(['fullName', 'email', 'line1', 'line2', 'city', 'postalCode', 'country'].map(key => [key, node()]));
     form.reportValidity = () => true;
+    form.querySelector = () => ({ value: 'csrf-test' });
+    get('saved-address-data').textContent = JSON.stringify(options.addresses || []);
     const local = options.local || storage({ [cartKey]: JSON.stringify([{ id: 1, quantity: 2 }]) });
     const session = options.session || storage();
     const requests = [], redirects = [];
     runInNewContext(source, {
-        document: { getElementById: get, createElement: node },
+        document: { getElementById: id => id === 'saved-address' && !options.addresses ? null : get(id), createElement: node },
         window: { addEventListener() {} }, Intl, crypto: webcrypto,
         sessionStorage: session, localStorage: local,
         location: { replace: value => redirects.push(value), reload() {} },
@@ -54,7 +56,7 @@ test('checkout sends only items and address, deducts the bag, and opens receipt'
     const sent = app.requests[1];
     assert.deepEqual(Object.keys(sent.body).sort(), ['address', 'items']);
     assert.equal(sent.headers['X-Checkout-Request'], undefined);
-    assert.equal(sent.headers['X-CSRF-TOKEN'], undefined);
+    assert.equal(sent.headers['X-CSRF-TOKEN'], 'csrf-test');
     assert.deepEqual(JSON.parse(app.local.getItem(cartKey)), []);
     assert.equal(app.redirects[0], `/Checkout/Confirmation?id=${receipt.id}`);
 });
@@ -87,4 +89,24 @@ test('empty bag cannot be submitted', async () => {
     await app.settle(); await app.submit();
     assert.equal(app.requests.length, 0);
     assert.match(app.get('checkout-error').textContent, /bag is empty/);
+});
+
+test('saved address fills delivery fields and is included in the order', async () => {
+    const address = { fullName: 'Saved Guest', email: 'saved@example.test', line1: '1 Saved Street', line2: '', city: 'Paris', postalCode: '75001', country: 'France' };
+    const app = setup([{ body: quote }, { body: receipt }], { addresses: [{ id: 'saved-id', address }] });
+    await app.settle();
+    const select = app.get('saved-address'); select.value = 'saved-id'; select.events.change();
+    assert.equal(app.form.elements.city.value, 'Paris');
+    await app.submit();
+    assert.deepEqual(app.requests[1].body.address, address);
+    assert.equal(app.requests[0].headers['X-CSRF-TOKEN'], 'csrf-test');
+});
+
+test('expired customer session requires sign-in instead of silently placing a guest order', async () => {
+    const app = setup([{ body: quote }, { status: 401, body: { detail: 'Your session expired.' } }]);
+    await app.settle(); await app.submit();
+    assert.equal(app.get('checkout-signin').hidden, false);
+    assert.match(app.get('checkout-status').textContent, /Sign in again/);
+    assert.equal(app.requests.length, 2);
+    assert.equal(JSON.parse(app.local.getItem(cartKey)).length, 1);
 });

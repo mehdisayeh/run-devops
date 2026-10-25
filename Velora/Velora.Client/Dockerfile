@@ -2,6 +2,7 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+RUN mkdir -p /var/velora/keys && chown "$APP_UID" /var/velora/keys
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080

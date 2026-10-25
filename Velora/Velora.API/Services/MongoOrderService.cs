@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using Velora.API.Data;
 using Velora.API.Models;
 using Velora.Contracts;
+using System.Security.Claims;
 
 namespace Velora.API.Services;
 
@@ -11,10 +12,12 @@ public sealed class MongoOrderService : IOrderService
 {
     private readonly IMongoCollection<Product> _products;
     private readonly IMongoCollection<StoredOrder> _orders;
+    private readonly IHttpContextAccessor? _context;
 
-    public MongoOrderService(IMongoClient client, IMongoCollection<Product> products, IOptions<MongoDbSettings> settings)
+    public MongoOrderService(IMongoClient client, IMongoCollection<Product> products, IOptions<MongoDbSettings> settings, IHttpContextAccessor? context = null)
     {
         _products = products;
+        _context = context;
         _orders = client.GetDatabase(settings.Value.DatabaseName).GetCollection<StoredOrder>("Orders");
     }
 
@@ -26,8 +29,21 @@ public sealed class MongoOrderService : IOrderService
         return CheckoutPricing.Quote(items, products);
     }
 
-    public async Task<OrderReceipt?> GetAsync(string id, CancellationToken cancellationToken) =>
-        (await _orders.Find(o => o.Receipt.Id == id).FirstOrDefaultAsync(cancellationToken))?.Receipt;
+    public async Task<OrderReceipt?> GetAsync(string id, CancellationToken cancellationToken)
+    {
+        var order = await _orders.Find(o => o.Receipt.Id == id).FirstOrDefaultAsync(cancellationToken);
+        if (order?.CustomerId is not null && order.CustomerId != _context?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            && _context?.HttpContext?.User.IsInRole("Admin") != true) return null;
+        return order?.Receipt;
+    }
+
+    public async Task<IReadOnlyList<OrderReceipt>> MineAsync(CancellationToken cancellationToken)
+    {
+        var id = _context?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new CheckoutException(401, "Sign in to view your orders.");
+        return (await _orders.Find(o => o.CustomerId == id).SortByDescending(o => o.Receipt.CreatedAtUtc)
+            .Limit(100).ToListAsync(cancellationToken)).Select(o => o.Receipt).ToList();
+    }
 
     public async Task<OrderReceipt> PlaceAsync(PlaceOrderRequest request, CancellationToken cancellationToken)
     {
@@ -69,7 +85,8 @@ public sealed class MongoOrderService : IOrderService
         {
             await _orders.InsertOneAsync(new StoredOrder
             {
-                IdempotencyKey = Guid.NewGuid().ToString("N"), Receipt = receipt
+                IdempotencyKey = Guid.NewGuid().ToString("N"), Receipt = receipt,
+                CustomerId = _context?.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
             }, cancellationToken: cancellationToken);
         }
         catch (MongoWriteException)

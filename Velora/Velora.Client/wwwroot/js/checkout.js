@@ -24,7 +24,8 @@
     async function post(action, body) {
         const response = await fetch(`/Checkout/${action}`, {
             method: 'POST', mode: 'same-origin',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': form.querySelector('[name="__RequestVerificationToken"]').value },
             body: JSON.stringify(body)
         });
         let data;
@@ -70,6 +71,11 @@
             location.replace(`/Checkout/Confirmation?id=${encodeURIComponent(receipt.id)}`);
         } catch (failure) {
             showError(failure.message);
+            if (failure.status === 401) {
+                status.textContent = 'Your session expired. Sign in again, then return to checkout.';
+                document.getElementById('checkout-signin').hidden = false;
+                return;
+            }
             if (failure.status === 400 || failure.status === 409 || failure.status === 422) {
                 fields.disabled = false;
                 refresh.hidden = false;
@@ -81,5 +87,15 @@
         } finally { busy = false; }
     });
     refresh.addEventListener('click', loadQuote);
+    const saved = document.getElementById('saved-address');
+    if (saved) {
+        const addresses = JSON.parse(document.getElementById('saved-address-data').textContent);
+        saved.addEventListener('change', () => {
+            const selected = addresses.find(item => item.id === saved.value);
+            if (!selected) return;
+            for (const name of ['fullName', 'email', 'line1', 'line2', 'city', 'postalCode', 'country'])
+                form.elements[name].value = selected.address[name] || '';
+        });
+    }
     loadQuote();
 })();

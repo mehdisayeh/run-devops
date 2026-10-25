@@ -1,0 +1,15 @@
+@model Velora.Contracts.RegisterRequest
+@{ ViewData["Title"] = "Create an account"; }
+<div class="shell account-page account-narrow">
+    <p class="eyebrow">WELCOME TO VELORA</p><h1>Create your account.</h1>
+    <p>Save your delivery addresses and keep your new orders together.</p>
+    <form asp-action="Register" method="post" class="account-form">
+        <div asp-validation-summary="All" role="alert" class="validation-summary"></div>
+        <label asp-for="FullName">Full name</label><input asp-for="FullName" autocomplete="name" maxlength="100" required />
+        <label asp-for="Email">Email</label><input asp-for="Email" type="email" autocomplete="email" maxlength="254" required />
+        <label asp-for="Password">Password</label><input asp-for="Password" type="password" autocomplete="new-password" minlength="12" maxlength="128" aria-describedby="password-help" required />
+        <p id="password-help" class="small muted">Use 12–128 characters. A long, unique passphrase works well.</p>
+        <button class="button button-dark" type="submit">Create account</button>
+    </form>
+    <p>Already have an account? <a asp-action="Login" class="text-link">Sign in</a></p>
+</div>

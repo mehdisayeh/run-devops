@@ -16,6 +16,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development 
       - "CatalogApiUrl=http://velora-api:8080"
+      - "DataProtection__KeysPath=/var/velora/keys"
+    volumes:
+      - velora-client-keys:/var/velora/keys
     depends_on:
       - velora.db
       - velora.api

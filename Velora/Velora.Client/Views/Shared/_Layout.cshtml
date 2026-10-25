@@ -25,6 +25,7 @@
         <form class="nav-search" asp-controller="Home" asp-action="Index" method="get" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input type="search" name="q" id="nav-search" placeholder="Find your next favorite…" aria-label="Search the collection" /><kbd>/</kbd></form>
         <a class="nav-about" asp-controller="Home" asp-action="Index" asp-fragment="our-story">Our philosophy</a>
         <a class="cart-link" asp-controller="Home" asp-action="Cart" aria-label="Shopping bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg><span class="bag-label">Bag</span><span id="cart-count">0</span></a>
+        <a class="nav-account" asp-controller="Account" asp-action="@(User.Identity?.IsAuthenticated == true ? "Profile" : "Login")">@(User.Identity?.IsAuthenticated == true ? "My account" : "Sign in")</a>
     </div>
     <nav class="shell category-nav" aria-label="Main navigation"><a asp-controller="Home" asp-action="Index" asp-fragment="collection">Shop all</a>@foreach(var category in products.Select(p => p.Category).Distinct()){<a asp-controller="Home" asp-action="Index" asp-route-category="@category" asp-fragment="collection">@category</a>}<a class="nav-edit" asp-controller="Home" asp-action="Index" asp-fragment="bestsellers">The best-seller edit ↗</a></nav>
 </header>

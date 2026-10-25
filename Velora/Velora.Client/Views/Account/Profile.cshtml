@@ -1,0 +1,32 @@
+@model Velora.Contracts.CustomerProfile
+@{ ViewData["Title"] = "Your account"; }
+<div class="shell account-page">
+    <p class="eyebrow">YOUR VELORA</p><h1>Your account.</h1>
+    @if (TempData["AccountMessage"] is string message) { <p class="account-notice" role="status">@message</p> }
+    <nav class="account-actions" aria-label="Account"><a asp-action="Orders" class="button button-dark">My orders</a>
+        @if (User.IsInRole("Admin")) { <a asp-action="Admin" class="text-link">Admin dashboard</a> }
+        <form asp-action="Logout" method="post"><button type="submit" class="text-link">Sign out</button></form>
+    </nav>
+    <div class="account-grid">
+        <section><h2>Profile</h2>
+            <p>@Model.Email</p><p class="small muted">Member since @Model.CreatedAtUtc.ToString("yyyy-MM-dd"). Your sign-in email stays the same when you update your name.</p>
+            <form asp-action="UpdateProfile" method="post" class="account-form">
+                <label for="profile-name">Full name</label><input id="profile-name" name="FullName" value="@Model.FullName" maxlength="100" required />
+                <button class="button button-dark" type="submit">Save profile</button>
+            </form>
+        </section>
+        <section><h2>Saved addresses</h2><p>Choose a saved address at checkout. You can save up to 10.</p>
+            @if (Model.Addresses.Count == 0) { <p class="muted">No addresses saved yet.</p> }
+            @foreach (var saved in Model.Addresses) {
+                <article class="address-card"><address>@saved.Address.FullName<br />@saved.Address.Line1<br />
+                    @if (!string.IsNullOrEmpty(saved.Address.Line2)) { @saved.Address.Line2<br /> }
+                    @saved.Address.PostalCode @saved.Address.City<br />@saved.Address.Country</address>
+                    <div class="account-actions"><a asp-action="Address" asp-route-id="@saved.Id" class="text-link">Edit</a>
+                        <form asp-action="DeleteAddress" method="post"><input type="hidden" name="id" value="@saved.Id" /><button type="submit" class="text-link">Remove</button></form>
+                    </div>
+                </article>
+            }
+            @if (Model.Addresses.Count < 10) { <a asp-action="Address" class="button button-dark">Add address</a> }
+        </section>
+    </div>
+</div>

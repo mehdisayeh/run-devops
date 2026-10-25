@@ -101,3 +101,5 @@ docker compose -f Velora/docker-compose.yml -f Velora/docker-compose.override.ym
 The existing MongoDB container, volumes and external network remain in place.
 
 See [guest checkout and orders](../CHECKOUT.md) for order endpoints, order endpoints and integration tests.
+
+See [customer accounts](../ACCOUNTS.md) for registration, sign-in, profiles, saved addresses, customer/admin rules, deployment and verification.
