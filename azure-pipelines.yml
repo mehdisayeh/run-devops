@@ -37,6 +37,7 @@ stages:
         command: buildAndPush
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
+        buildContext: '$(Build.SourcesDirectory)/Velora'
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
@@ -70,8 +71,7 @@ stages:
             inputs:
               action: deploy
               manifests: |
-                $(Pipeline.Workspace)/manifests/deployment.yml
-                $(Pipeline.Workspace)/manifests/service.yml
+                $(Pipeline.Workspace)/manifests/veloraapi.yml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
