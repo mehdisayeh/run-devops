@@ -9,7 +9,8 @@ trigger:
   paths:
     include:
       - 'Velora/Velora.Client/**'
-      - 'aks/veloracient.yml'
+      - 'Velora/Shared/**'
+      - 'aks/veloraclient.yml'
       - 'pipelines/veloraclient-pipeline.yml'
 
 resources:
@@ -21,7 +22,7 @@ variables:
   dockerRegistryServiceConnection: '7a4d2950-b8cf-46b0-8d6a-dcbb35df2ced'
   imageRepository: 'veloraclient'
   containerRegistry: 'veloradevacr.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/Velora/Velora.Client/Dockerfile'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'veloradevacr5965ea13-auth'
 
