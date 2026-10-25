@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: veloraapi 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: veloraapi
+  template:
+    metadata:
+      labels:
+        app: veloraapi 
+    spec:
+      containers:
+        - name: veloraapi 
+          image: veloradevacr.azurecr.io/veloraapi
+          ports:
+          - containerPort: 8080
